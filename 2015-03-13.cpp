@@ -49,7 +49,6 @@ VOID PrintNTHeaders()
 	PIMAGE_FILE_HEADER pPEHeader = NULL;
 	PIMAGE_OPTIONAL_HEADER32 pOptionHeader = NULL;
 	PIMAGE_SECTION_HEADER pSectionHeader = NULL;
-	PIMAGE_SECTION_HEADER pSectionHeader2 = NULL;
 
 	pFileBuffer = ReadPEFile((LPSTR)"R:\\sogou_pinyin_93f.exe");
 	if (!pFileBuffer)
