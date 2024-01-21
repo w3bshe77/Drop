@@ -1,7 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
-
-#include <iostream>
 #include <Windows.h>
 #pragma warning(disable:4996)
 LPVOID ReadPEFile(LPSTR lpszFile)
@@ -93,7 +90,7 @@ VOID PrintNTHeaders()
 	//可选PE头	
 	pOptionHeader = (PIMAGE_OPTIONAL_HEADER32)((DWORD)pPEHeader + IMAGE_SIZEOF_FILE_HEADER);
 	printf("********************OPTIOIN_PE头********************\n");
-	printf("OPTION_PE：%x\n", pOptionHeader->Magic); 
+	printf("OPTION_PE：%x\n", pOptionHeader->Magic);
 	printf("ImageBase：%x\n", pOptionHeader->ImageBase);
 	printf("AddressOfEntryPoint：%x\n", pOptionHeader->AddressOfEntryPoint);
 	printf("内存对齐：%x\n", pOptionHeader->SectionAlignment);
@@ -101,38 +98,22 @@ VOID PrintNTHeaders()
 	printf("内存中PE文件的尺寸（是内存对齐的整数倍）：%x\n", pOptionHeader->SizeOfImage);
 	printf("PE头+节表的尺寸：%x\n", pOptionHeader->SizeOfHeaders);
 	printf("Rva数量：%x\n", pOptionHeader->NumberOfRvaAndSizes);
-	pSectionHeader = (PIMAGE_SECTION_HEADER)((DWORD)pOptionHeader + 0xE0);
-	printf("********************SECTION1 HEARDER********************\n");
-	printf("第1个SECTION：%s\n", pSectionHeader->Name);
-	printf("SECTION文件真实尺寸VirtualSize：%x\n", pSectionHeader->Misc.VirtualSize);
-	printf("SECTION文件对齐尺寸SizeOfRawData：%x\n", pSectionHeader->SizeOfRawData);
-	printf("SECTION内存偏移地址VirtualAddress：%x  加上ImageBase后是实际Adress: %x\n",
-		pSectionHeader->VirtualAddress, 
-		pOptionHeader->ImageBase + pSectionHeader->VirtualAddress);
-	printf("SECTION文件偏移地址PointerToRawData：%x\n", pSectionHeader->PointerToRawData);
-	printf("SECTION文件属性Characteristics：%x\n", pSectionHeader->Characteristics);
-	printf("SECTION文件真实起止地址：%x--%x\n", pSectionHeader->PointerToRawData,
-		pSectionHeader->PointerToRawData + pSectionHeader->Misc.VirtualSize);
-	printf("SECTION文件对齐起止地址：%x--%x\n", pSectionHeader->PointerToRawData,
-		pSectionHeader->PointerToRawData + pSectionHeader->SizeOfRawData);
-	printf("SECTION内存真实起止地址：%x--%x\n", pOptionHeader->ImageBase + pSectionHeader->VirtualAddress,
-		pOptionHeader->ImageBase + pSectionHeader->VirtualAddress + pSectionHeader->Misc.VirtualSize);
 
-	for (int i = 1; i < pPEHeader->NumberOfSections; i++)
+	for (int i = 0; i < pPEHeader->NumberOfSections; i++)
 	{
-		pSectionHeader = (PIMAGE_SECTION_HEADER)((DWORD)pSectionHeader + IMAGE_SIZEOF_SECTION_HEADER);
-		printf("********************SECTION%d HEARDER********************\n",i+1);
-		printf("第%d个SECTION：%s\n", i+1, pSectionHeader->Name);
+		pSectionHeader = (PIMAGE_SECTION_HEADER)((DWORD)pOptionHeader + 0xE0 + IMAGE_SIZEOF_SECTION_HEADER * i);
+		printf("********************SECTION%d HEARDER********************\n", i + 1);
+		printf("第%d个SECTION：%s\n", i + 1, pSectionHeader->Name);
 		printf("SECTION文件真实尺寸VirtualSize：%x\n", pSectionHeader->Misc.VirtualSize);
 		printf("SECTION文件对齐尺寸SizeOfRawData：%x\n", pSectionHeader->SizeOfRawData);
 		printf("SECTION内存偏移地址VirtualAddress：%x  加上ImageBase后是实际Adress: %x\n", pSectionHeader->VirtualAddress,
-			pOptionHeader->ImageBase+ pSectionHeader->VirtualAddress);
+			pOptionHeader->ImageBase + pSectionHeader->VirtualAddress);
 		printf("SECTION文件偏移地址PointerToRawData：%x\n", pSectionHeader->PointerToRawData);
 		printf("SECTION文件属性Characteristics：%x\n", pSectionHeader->Characteristics);
 		printf("SECTION文件真实起止地址：%x--%x\n", pSectionHeader->PointerToRawData,
-			pSectionHeader->PointerToRawData+ pSectionHeader->Misc.VirtualSize);
-		printf("SECTION文件对齐起止地址：%x--%x\n", pSectionHeader->PointerToRawData, 
-			pSectionHeader->PointerToRawData + pSectionHeader->SizeOfRawData);	
+			pSectionHeader->PointerToRawData + pSectionHeader->Misc.VirtualSize);
+		printf("SECTION文件对齐起止地址：%x--%x\n", pSectionHeader->PointerToRawData,
+			pSectionHeader->PointerToRawData + pSectionHeader->SizeOfRawData);
 		printf("SECTION内存真实起止地址：%x--%x\n", pOptionHeader->ImageBase + pSectionHeader->VirtualAddress,
 			pOptionHeader->ImageBase + pSectionHeader->VirtualAddress + pSectionHeader->Misc.VirtualSize);
 	}
