@@ -2,7 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <cstdlib>
 #include <Windows.h>
+#include <time.h>
+#include <cstring>
 #pragma warning (disable:4996)
 #define MESSAGEBOXADDRESS 0x74E57E90
 #define SHELLCODELENTH 0x12
@@ -18,8 +21,10 @@ DWORD imageBuffertoNewFileBuffer(LPVOID pNew_ImageBuffer, OUT PVOID* pFileBuffer
 BOOL MemoryToFile(PVOID pFileBuffer, DWORD size, LPSTR lpszFile);
 void MoveExportTable(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer);
 void MoveRelocTable(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer);
+VOID ReoairRelocationTable(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer);
 DWORD RVAToFOA(LPVOID pFileBuffer, size_t RVA);
 DWORD FOAToVA(LPVOID pFileBuffer, size_t FOA);
 void IniPefileDate(LPVOID pFileBuffer);
 void PrintInfo(LPVOID pFileBuffer);
+char* generateRandomString(int length);
 VOID operate();
