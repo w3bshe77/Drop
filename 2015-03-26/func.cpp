@@ -1,18 +1,18 @@
 #include "func.h"
-
 PIMAGE_DOS_HEADER pDosHeader = NULL;
 PIMAGE_NT_HEADERS pNTHeader = NULL;
 PIMAGE_FILE_HEADER pPEHeader = NULL;
 PIMAGE_OPTIONAL_HEADER32 pOptionHeader = NULL;
 PIMAGE_SECTION_HEADER pSectionHeader = NULL;
 LPVOID pTempImageBuffer = NULL;
-IMAGE_DATA_DIRECTORY PEtables; //µ¼³ö±í
+IMAGE_DATA_DIRECTORY PEtables; //å¯¼å‡ºè¡¨
 PIMAGE_EXPORT_DIRECTORY Exportable = NULL;
 PIMAGE_EXPORT_DIRECTORY TrueExport = NULL;
 PIMAGE_BASE_RELOCATION  Reloctiontable = NULL;
 PIMAGE_BASE_RELOCATION  TrueReloc = NULL;
 char file_path[] = "R:\\demotll2.dll";
 char write_file_path[] = "D:\\demotll2_New.dll";
+
 BYTE SectionTable[] =
 {
 	0x2E,0x4E,0x65,0x77,0x53,0x65,0x63,00,//Name
@@ -26,6 +26,7 @@ BYTE SectionTable[] =
 	00,00,
 	0x20,00,00,0x60//Characteristics
 };
+
 BYTE shellcode[] =
 {
 	0x6A,00,0x6A,00,0x6A,00,0x6A,00,
@@ -33,28 +34,30 @@ BYTE shellcode[] =
 	0xE9,00,00,00,00
 };
 /*
-µÚÒ»²½£ºÔÚDLLÖĞĞÂÔöÒ»¸ö½Ú£¬²¢·µ»ØĞÂÔöºóµÄFOA
+ç§»åŠ¨å¯¼å‡ºè¡¨çš„æ­¥éª¤ï¼š
 
-µÚ¶ş²½£º¸´ÖÆAddressOfFunctions
+ç¬¬ä¸€æ­¥ï¼šåœ¨DLLä¸­æ–°å¢ä¸€ä¸ªèŠ‚ï¼Œå¹¶è¿”å›æ–°å¢åçš„FOA
 
-	³¤¶È£º4*NumberOfFunctions
+ç¬¬äºŒæ­¥ï¼šå¤åˆ¶AddressOfFunctions
 
-µÚÈı²½£º¸´ÖÆAddressOfNameOrdinals
+	é•¿åº¦ï¼š4*NumberOfFunctions
 
-	³¤¶È£ºNumberOfNames*2
+ç¬¬ä¸‰æ­¥ï¼šå¤åˆ¶AddressOfNameOrdinals
 
-µÚËÄ²½£º¸´ÖÆAddressOfNames
+	é•¿åº¦ï¼šNumberOfNames*2
 
-	³¤¶È£ºNumberOfNames*4
+ç¬¬å››æ­¥ï¼šå¤åˆ¶AddressOfNames
 
-µÚÎå²½£º¸´ÖÆËùÓĞµÄº¯ÊıÃû
+	é•¿åº¦ï¼šNumberOfNames*4
 
-	³¤¶È²»È·¶¨£¬¸´ÖÆÊ±Ö±½ÓĞŞ¸´AddressOfNames
+ç¬¬äº”æ­¥ï¼šå¤åˆ¶æ‰€æœ‰çš„å‡½æ•°å
 
-µÚÁù²½£º¸´ÔÓIMAGE_EXPORT_DIRECTORY½á¹¹
+	é•¿åº¦ä¸ç¡®å®šï¼Œå¤åˆ¶æ—¶ç›´æ¥ä¿®å¤AddressOfNames
+
+ç¬¬å…­æ­¥ï¼šå¤æ‚IMAGE_EXPORT_DIRECTORYç»“æ„
 
 
-µÚÆß²½£ºĞŞ¸´IMAGE_EXPORT_DIRECTORY½á¹¹ÖĞµÄ
+ç¬¬ä¸ƒæ­¥ï¼šä¿®å¤IMAGE_EXPORT_DIRECTORYç»“æ„ä¸­çš„
 
 	AddressOfFunctions
 
@@ -62,24 +65,24 @@ BYTE shellcode[] =
 
 	AddressOfNames
 
-µÚ°Ë²½£ºĞŞ¸´Ä¿Â¼ÏîÖĞµÄÖµ£¬Ö¸ÏòĞÂµÄIMAGE_EXPORT_DIRECTORY
+ç¬¬å…«æ­¥ï¼šä¿®å¤ç›®å½•é¡¹ä¸­çš„å€¼ï¼ŒæŒ‡å‘æ–°çš„IMAGE_EXPORT_DIRECTORY
 
 */
-/*¶ÁÈ¡ÎÄ¼ş*/
+/*è¯»å–æ–‡ä»¶*/
 DWORD ReadPEFile(const char* lpszFile, OUT PVOID* pFileBuffer)
 {
 	FILE* pFile = NULL;
 	DWORD fileSize = 0;
 	LPVOID pTempFileBuffer = NULL;
 
-	//´ò¿ªÎÄ¼ş	
+	//æ‰“å¼€æ–‡ä»¶	
 	pFile = fopen(lpszFile, "rb");
 	if (!pFile)
 	{
-		printf(" ÎŞ·¨´ò¿ª EXE ÎÄ¼ş! ");
+		printf(" æ— æ³•æ‰“å¼€ EXE æ–‡ä»¶! ");
 		return NULL;
 	}
-	//¶ÁÈ¡ÎÄ¼ş´óĞ¡		
+	//è¯»å–æ–‡ä»¶å¤§å°		
 	fseek(pFile, 0, SEEK_END);
 	fileSize = ftell(pFile);
 	printf("================ReadPEFile================\n");
@@ -87,33 +90,33 @@ DWORD ReadPEFile(const char* lpszFile, OUT PVOID* pFileBuffer)
 
 	fseek(pFile, 0, SEEK_SET);
 
-	//·ÖÅä»º³åÇø	
+	//åˆ†é…ç¼“å†²åŒº	
 	pTempFileBuffer = malloc(fileSize);
 
 	if (!pTempFileBuffer)
 	{
-		printf(" ·ÖÅä¿Õ¼äÊ§°Ü! ");
+		printf(" åˆ†é…ç©ºé—´å¤±è´¥! ");
 		fclose(pFile);
 		return NULL;
 	}
-	//½«ÎÄ¼şÊı¾İ¶ÁÈ¡µ½»º³åÇø	
+	//å°†æ–‡ä»¶æ•°æ®è¯»å–åˆ°ç¼“å†²åŒº	
 	memset(pTempFileBuffer, '\0', fileSize);
 	size_t n = fread(pTempFileBuffer, fileSize, 1, pFile);
 	if (!n)
 	{
-		printf(" ¶ÁÈ¡Êı¾İÊ§°Ü! ");
+		printf(" è¯»å–æ•°æ®å¤±è´¥! ");
 		free(pTempFileBuffer);
 		fclose(pFile);
 		return NULL;
 	}
-	//¹Ø±ÕÎÄ¼ş	
+	//å…³é—­æ–‡ä»¶	
 
 	*pFileBuffer = pTempFileBuffer;
 	pTempFileBuffer = NULL;
 	fclose(pFile);
 	return fileSize;
 }
-/*À­Éì¹ı³Ì*/
+/*æ‹‰ä¼¸è¿‡ç¨‹*/
 DWORD CopyFileBufferToImageBuffer(LPVOID pFileBuffer, OUT PVOID* pImageBuffer)
 {
 
@@ -126,23 +129,23 @@ DWORD CopyFileBufferToImageBuffer(LPVOID pFileBuffer, OUT PVOID* pImageBuffer)
 
 	if (pFileBuffer == NULL)
 	{
-		printf("»º³åÇøÖ¸ÕëÎŞĞ§\n");
+		printf("ç¼“å†²åŒºæŒ‡é’ˆæ— æ•ˆ\n");
 		return 0;
 	}
 
-	//ÅĞ¶ÏÊÇ·ñÊÇÓĞĞ§µÄMZ±êÖ¾	
+	//åˆ¤æ–­æ˜¯å¦æ˜¯æœ‰æ•ˆçš„MZæ ‡å¿—	
 	if (*((PWORD)pFileBuffer) != IMAGE_DOS_SIGNATURE)
 	{
-		printf("²»ÊÇÓĞĞ§µÄMZ±êÖ¾\n");
+		printf("ä¸æ˜¯æœ‰æ•ˆçš„MZæ ‡å¿—\n");
 		free(pFileBuffer);
 		return 0;
 	}
 	pDosHeader = (PIMAGE_DOS_HEADER)pFileBuffer;
 
-	//ÅĞ¶ÏÊÇ·ñÊÇÓĞĞ§µÄPE±êÖ¾	
+	//åˆ¤æ–­æ˜¯å¦æ˜¯æœ‰æ•ˆçš„PEæ ‡å¿—	
 	if (*((PDWORD)((DWORD)pFileBuffer/*4D*/ + pDosHeader->e_lfanew)) != IMAGE_NT_SIGNATURE)
 	{
-		printf("²»ÊÇÓĞĞ§µÄPE±êÖ¾\n");
+		printf("ä¸æ˜¯æœ‰æ•ˆçš„PEæ ‡å¿—\n");
 		free(pFileBuffer);
 		return 0;
 	}
@@ -150,22 +153,22 @@ DWORD CopyFileBufferToImageBuffer(LPVOID pFileBuffer, OUT PVOID* pImageBuffer)
 
 	pPEHeader = (PIMAGE_FILE_HEADER)&pNTHeader->FileHeader;
 
-	//¿ÉÑ¡PEÍ·	
+	//å¯é€‰PEå¤´	
 	pOptionHeader = (PIMAGE_OPTIONAL_HEADER32)(&pNTHeader->OptionalHeader);
 
 
-	//ÉêÇëµÄ¿Õ¼äÊÇÕû¸öimagesizeµÄ´óĞ¡
+	//ç”³è¯·çš„ç©ºé—´æ˜¯æ•´ä¸ªimagesizeçš„å¤§å°
 	DWORD pImagesize = pOptionHeader->SizeOfImage;
 
 	//printf("CopyFileBufferToImageBuffer__pOptionHeader->SizeOfImage:%x\n", pImagesize);
 	pTempImageBuffer = malloc(pImagesize);
 	if (!pTempImageBuffer)
 	{
-		printf(" ·ÖÅä¿Õ¼äÊ§°Ü! ");
+		printf(" åˆ†é…ç©ºé—´å¤±è´¥! ");
 	}
-	//ÏÈÌî³ä0
+	//å…ˆå¡«å……0
 	memset(pTempImageBuffer, 0, pImagesize);
-	//¿½±´pFileBufferµ½pImageBuffer ¿½±´´óĞ¡ÎªpOptionHeader->SizeOfHeaders
+	//æ‹·è´pFileBufferåˆ°pImageBuffer æ‹·è´å¤§å°ä¸ºpOptionHeader->SizeOfHeaders
 	memcpy(pTempImageBuffer, pFileBuffer, pOptionHeader->SizeOfHeaders);
 
 
@@ -184,10 +187,10 @@ DWORD CopyFileBufferToImageBuffer(LPVOID pFileBuffer, OUT PVOID* pImageBuffer)
 
 	return pImagesize;
 
-	//¸´ÖÆpImageBufferµ½NewBuffer
+	//å¤åˆ¶pImageBufferåˆ°NewBuffer
 
 }
-/*Ôö¼ÓimagebufferÒ»¸ösectionaligment*/
+/*å¢åŠ imagebufferä¸€ä¸ªsectionaligment*/
 DWORD AddImageBuffer(LPVOID pImageBuffer, OUT PVOID* pNewImageBuffer) {
 	printf("---------------ExpansionBuffer---------------\n");
 	PIMAGE_DOS_HEADER pDosHeader = NULL;
@@ -197,23 +200,23 @@ DWORD AddImageBuffer(LPVOID pImageBuffer, OUT PVOID* pNewImageBuffer) {
 	PIMAGE_SECTION_HEADER pSectionHeader = NULL;
 	if (pImageBuffer == NULL)
 	{
-		printf("ExpansionBuffer»º³åÇøÖ¸ÕëÎŞĞ§\n");
+		printf("ExpansionBufferç¼“å†²åŒºæŒ‡é’ˆæ— æ•ˆ\n");
 		return 0;
 	}
 
-	//ÅĞ¶ÏÊÇ·ñÊÇÓĞĞ§µÄMZ±êÖ¾	
+	//åˆ¤æ–­æ˜¯å¦æ˜¯æœ‰æ•ˆçš„MZæ ‡å¿—	
 	if (*((PWORD)pImageBuffer) != IMAGE_DOS_SIGNATURE)
 	{
-		printf("ExpansionBuffer²»ÊÇÓĞĞ§µÄMZ±êÖ¾\n");
+		printf("ExpansionBufferä¸æ˜¯æœ‰æ•ˆçš„MZæ ‡å¿—\n");
 		free(pImageBuffer);
 		return 0;
 	}
 	pDosHeader = (PIMAGE_DOS_HEADER)pImageBuffer;
 
-	//ÅĞ¶ÏÊÇ·ñÊÇÓĞĞ§µÄPE±êÖ¾	
+	//åˆ¤æ–­æ˜¯å¦æ˜¯æœ‰æ•ˆçš„PEæ ‡å¿—	
 	if (*((PDWORD)((DWORD)pImageBuffer/*4D*/ + (DWORD)pDosHeader->e_lfanew)) != IMAGE_NT_SIGNATURE)
 	{
-		printf("ExpansionBuffer²»ÊÇÓĞĞ§µÄPE±êÖ¾\n");
+		printf("ExpansionBufferä¸æ˜¯æœ‰æ•ˆçš„PEæ ‡å¿—\n");
 		free(pImageBuffer);
 		return 0;
 	}
@@ -226,7 +229,7 @@ DWORD AddImageBuffer(LPVOID pImageBuffer, OUT PVOID* pNewImageBuffer) {
 	LPVOID pNewBuffer = malloc(NewFilesize);
 	if (!pNewBuffer)
 	{
-		printf(" ·ÖÅä¿Õ¼äÊ§°Ü! ");
+		printf(" åˆ†é…ç©ºé—´å¤±è´¥! ");
 	}
 	else
 	{
@@ -237,21 +240,21 @@ DWORD AddImageBuffer(LPVOID pImageBuffer, OUT PVOID* pNewImageBuffer) {
 	pNewBuffer = NULL;
 	return NewFilesize;
 }
-/*ÔÚfilebuffµÄ»ù´¡ÉÏĞÂÔöÒ»¸ö½Ú*/
+/*åœ¨filebuffçš„åŸºç¡€ä¸Šæ–°å¢ä¸€ä¸ªèŠ‚*/
 DWORD AddFileBuffer(LPVOID pFileBuffer, DWORD filesize, OUT PVOID* pNewFileBuffer)
 {
 	/*
-		1) Ìí¼ÓÒ»¸öĞÂµÄ½Ú(¿ÉÒÔcopyÒ»·İ)
+		1) æ·»åŠ ä¸€ä¸ªæ–°çš„èŠ‚(å¯ä»¥copyä¸€ä»½)
 
-		2) ÔÚĞÂÔö½ÚºóÃæ Ìî³äÒ»¸ö½Ú´óĞ¡µÄ000
+		2) åœ¨æ–°å¢èŠ‚åé¢ å¡«å……ä¸€ä¸ªèŠ‚å¤§å°çš„000
 
-		3) ĞŞ¸ÄPEÍ·ÖĞ½ÚµÄÊıÁ¿
+		3) ä¿®æ”¹PEå¤´ä¸­èŠ‚çš„æ•°é‡
 
-		4) ĞŞ¸ÄsizeOfImageµÄ´óĞ¡
+		4) ä¿®æ”¹sizeOfImageçš„å¤§å°
 
-		5) ÔÙÔ­ÓĞÊı¾İµÄ×îºó£¬ĞÂÔöÒ»¸ö½ÚµÄÊı¾İ(ÄÚ´æ¶ÔÆëµÄÕûÊı±¶).
+		5) å†åŸæœ‰æ•°æ®çš„æœ€åï¼Œæ–°å¢ä¸€ä¸ªèŠ‚çš„æ•°æ®(å†…å­˜å¯¹é½çš„æ•´æ•°å€).
 
-		6£©ĞŞÕıĞÂÔö½Ú±íµÄÊôĞÔ
+		6ï¼‰ä¿®æ­£æ–°å¢èŠ‚è¡¨çš„å±æ€§
 
 	sizeofheaders +lastsection.pointtorawdata + lastsection.sizeofrawdata + FileAligment * 2  ?
 	sizeof(pFielBuffer) + FileAligment * 2  ?
@@ -263,13 +266,13 @@ DWORD AddFileBuffer(LPVOID pFileBuffer, DWORD filesize, OUT PVOID* pNewFileBuffe
 	*/
 	IniPefileDate(pFileBuffer);
 	printf("sizeof pFileBuffer:%X\npOptionHeader->SectionAlignment * 2:%X\nfilesize + pOptionHeader->SectionAlignment * 2:%X\n", filesize, pOptionHeader->SectionAlignment * 2, filesize + pOptionHeader->SectionAlignment * 2);
-	//1) Ìí¼ÓÒ»¸öĞÂµÄ½Ú(¿ÉÒÔcopyÒ»·İ)
+	//1) æ·»åŠ ä¸€ä¸ªæ–°çš„èŠ‚(å¯ä»¥copyä¸€ä»½)
 	DWORD pNewFilesize = (DWORD)filesize + pOptionHeader->SectionAlignment * 2;
 	LPVOID pNewBuffer = malloc(pNewFilesize);
 	printf("sizeof pNewFilesize:%X\npOptionHeader->SizeOfImage:%X\n", pNewFilesize, pOptionHeader->SizeOfImage);
 	if (!pNewBuffer)
 	{
-		printf(" ·ÖÅä¿Õ¼äÊ§°Ü! ");
+		printf(" åˆ†é…ç©ºé—´å¤±è´¥! ");
 	}
 	else
 	{
@@ -280,41 +283,30 @@ DWORD AddFileBuffer(LPVOID pFileBuffer, DWORD filesize, OUT PVOID* pNewFileBuffe
 	pNewBuffer = NULL;
 	return pNewFilesize;
 }
-/*filebuff¼ÓÈëSectionTable*/
+/*filebuffåŠ å…¥SectionTable*/
 void ChangePEinfo(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer)
 {
 	IniPefileDate(pFileBuffer);
 	PIMAGE_SECTION_HEADER pLastSectionHeader = pSectionHeader + pPEHeader->NumberOfSections - 1;
 	if ((PBYTE)pOptionHeader->SizeOfHeaders - (PBYTE)pDosHeader->e_lfanew - 4 - IMAGE_SIZEOF_FILE_HEADER - pPEHeader->SizeOfOptionalHeader - pPEHeader->NumberOfSections * 40 < 80)
 	{
-		printf("¿Õ¼ä²»×ã£¬ÎŞ·¨ĞÂÔö½Ú±í");
+		printf("ç©ºé—´ä¸è¶³ï¼Œæ— æ³•æ–°å¢èŠ‚è¡¨");
 		exit(0);
 	}
 
 	PIMAGE_SECTION_HEADER pNewSectionHeader = pSectionHeader + pPEHeader->NumberOfSections;
 	//printf("pNewSectionHeader = %08X\npSectionHeader = %08X\npPEHeader->NumberOfSections = %X\npSectionHeader + pPEHeader->NumberOfSections = %08X\n", pNewSectionHeader, pSectionHeader,pPEHeader->NumberOfSections, pSectionHeader + pPEHeader->NumberOfSections);
-	//2) ÔÚĞÂÔö½ÚºóÃæ Ìî³äÒ»¸ö½Ú´óĞ¡µÄ0
+	//2) åœ¨æ–°å¢èŠ‚åé¢ å¡«å……ä¸€ä¸ªèŠ‚å¤§å°çš„0
 	memset(pNewSectionHeader, 0, sizeof(IMAGE_SECTION_HEADER) * 2);
-	//3) ĞŞ¸ÄPEÍ·ÖĞ½ÚµÄÊıÁ¿
+	//3) ä¿®æ”¹PEå¤´ä¸­èŠ‚çš„æ•°é‡
 	pPEHeader->NumberOfSections = pPEHeader->NumberOfSections + 1;
-	//4) ĞŞ¸ÄsizeOfImageµÄ´óĞ¡
+	//4) ä¿®æ”¹sizeOfImageçš„å¤§å°
 	pOptionHeader->SizeOfImage = pOptionHeader->SizeOfImage + pOptionHeader->SectionAlignment;
-	// 5) ÔÙÔ­ÓĞÊı¾İµÄ×îºó£¬ĞÂÔöÒ»¸ö½ÚµÄÊı¾İ.
+	// 5) å†åŸæœ‰æ•°æ®çš„æœ€åï¼Œæ–°å¢ä¸€ä¸ªèŠ‚çš„æ•°æ®.
 
 	PBYTE TableBegin = (PBYTE)(pNewSectionHeader);
-	//PBYTE TableBegin1 = (PBYTE)((DWORD)pLastSectionHeader + 0x28);
-	//printf("lastSectionheader:%s\nTableBegin:%08x\nTableBegin1:%08x\n SectionTable:%08x\nSECTIONTABLELENTH:%08x\n\n", pLastSectionHeader->Name, TableBegin, TableBegin1,SectionTable, SECTIONTABLELENTH);
-	//printf("pPEHeader->NumberOfSections:%d\npOptionHeader->SizeOfImage:%08x\nsizeof(IMAGE_SECTION_HEADER):%x\n", pPEHeader->NumberOfSections, pOptionHeader->SizeOfImage, sizeof(IMAGE_SECTION_HEADER));
 	memcpy(TableBegin, SectionTable, SECTIONTABLELENTH);
-	printf("\n\npNewSectionHeader->Name:%s-->VirtualSize:%08X-->VirtualAddress:%08X-->SizeOfRawData:%08X-->PointerToRawData:%08X\n\n", 
-		pNewSectionHeader->Name, 
-		pNewSectionHeader->Misc.VirtualSize,
-		pNewSectionHeader->VirtualAddress, 
-		pNewSectionHeader->SizeOfRawData, 
-		pNewSectionHeader->PointerToRawData);
-
 	pNewSectionHeader->PointerToRawData = pLastSectionHeader->PointerToRawData + pLastSectionHeader->SizeOfRawData;
-	//printf("NewPointerToRawData= %08X\nLastPointerToRawData = %08X\nLastSizeOfRawData = %08X\nLastPointerToRawData +LastSizeOfRawData = %08X\n",pNewSectionHeader->PointerToRawData, pLastSectionHeader->PointerToRawData, pLastSectionHeader->SizeOfRawData, pLastSectionHeader->PointerToRawData + pLastSectionHeader->SizeOfRawData);
 	pNewSectionHeader->SizeOfRawData = pOptionHeader->FileAlignment;
 	if (((int)pLastSectionHeader->Misc.VirtualSize - (int)pOptionHeader->SectionAlignment) > 0)
 	{
@@ -326,18 +318,17 @@ void ChangePEinfo(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer)
 	}
 	pNewSectionHeader->Characteristics = pSectionHeader->Characteristics;
 	pNewSectionHeader->Misc.VirtualSize = pOptionHeader->SectionAlignment;
-
-	printf("\n\npNewSectionHeader->Name:%s-->VirtualSize:%08X-->VirtualAddress:%08X-->SizeOfRawData:%08X-->PointerToRawData:%08X\n\n",
-		pNewSectionHeader->Name,
-		pNewSectionHeader->Misc.VirtualSize,
-		pNewSectionHeader->VirtualAddress,
-		pNewSectionHeader->SizeOfRawData,
-		pNewSectionHeader->PointerToRawData);
+	Sleep(500);//æ¯æ¬¡éšæœºç”Ÿæˆè¡¨åï¼Œæ—¶é—´çŸ­äº†çš„è¯ï¼Œè°ƒç”¨ä¸¤æ¬¡å°±ä¼šå¢åŠ 2ä¸ªç›¸åŒåå­—çš„èŠ‚è¡¨ï¼Œæ‰€ä»¥sleepã€‚
+	srand(static_cast<unsigned int>(time(nullptr)));//ä»¥å½“å‰æ—¶é—´ä½œä¸ºç§å­
+	const unsigned int strlen = 5;
+	char * str = generateRandomString(strlen);
+	char* name = (char*)pNewSectionHeader->Name;
+	strncpy(name + 1, str, IMAGE_SIZEOF_SHORT_NAME);//ä¸æ”¹å˜ç¬¬ä¸€ä¸ªå­—ç¬¦: "."
 	memset((PDWORD)((DWORD)pFileBuffer + pNewSectionHeader->PointerToRawData), 0, pOptionHeader->FileAlignment);
 	*pNewFileBuffer = pFileBuffer;
 	pFileBuffer = NULL;
 }
-/*imagebuffer¼ÓÈëSectionTable+shellcode*/
+/*imagebufferåŠ å…¥SectionTable+shellcode*/
 BOOL NewSections(LPVOID pNewImageBuffer, OUT PVOID* pNew_ImageBuffer)
 {
 	printf("---------------NewSections---------------\n");
@@ -348,23 +339,23 @@ BOOL NewSections(LPVOID pNewImageBuffer, OUT PVOID* pNew_ImageBuffer)
 	PIMAGE_SECTION_HEADER pSectionHeader = NULL;
 	if (pNewImageBuffer == NULL)
 	{
-		printf("»º³åÇøÖ¸ÕëÎŞĞ§\n");
+		printf("ç¼“å†²åŒºæŒ‡é’ˆæ— æ•ˆ\n");
 		return 0;
 	}
 
-	//ÅĞ¶ÏÊÇ·ñÊÇÓĞĞ§µÄMZ±êÖ¾	
+	//åˆ¤æ–­æ˜¯å¦æ˜¯æœ‰æ•ˆçš„MZæ ‡å¿—	
 	if (*((PWORD)pNewImageBuffer) != IMAGE_DOS_SIGNATURE)
 	{
-		printf("²»ÊÇÓĞĞ§µÄMZ±êÖ¾\n");
+		printf("ä¸æ˜¯æœ‰æ•ˆçš„MZæ ‡å¿—\n");
 		free(pNewImageBuffer);
 		return 0;
 	}
 	pDosHeader = (PIMAGE_DOS_HEADER)pNewImageBuffer;
 
-	//ÅĞ¶ÏÊÇ·ñÊÇÓĞĞ§µÄPE±êÖ¾	
+	//åˆ¤æ–­æ˜¯å¦æ˜¯æœ‰æ•ˆçš„PEæ ‡å¿—	
 	if (*((PDWORD)((DWORD)pNewImageBuffer/*4D*/ + (DWORD)pDosHeader->e_lfanew)) != IMAGE_NT_SIGNATURE)
 	{
-		printf("²»ÊÇÓĞĞ§µÄPE±êÖ¾\n");
+		printf("ä¸æ˜¯æœ‰æ•ˆçš„PEæ ‡å¿—\n");
 		free(pNewImageBuffer);
 		return 0;
 	}
@@ -378,7 +369,7 @@ BOOL NewSections(LPVOID pNewImageBuffer, OUT PVOID* pNew_ImageBuffer)
 	PIMAGE_SECTION_HEADER lastSectionheader = pSectionHeader + pPEHeader->NumberOfSections - 1;
 	if ((PBYTE)pOptionHeader->SizeOfHeaders - (PBYTE)pDosHeader->e_lfanew - 4 - IMAGE_SIZEOF_FILE_HEADER - pPEHeader->SizeOfOptionalHeader - pPEHeader->NumberOfSections * 40 < 80)
 	{
-		printf("¿Õ¼ä²»×ã£¬ÎŞ·¨ĞÂÔö½Ú±í");
+		printf("ç©ºé—´ä¸è¶³ï¼Œæ— æ³•æ–°å¢èŠ‚è¡¨");
 		exit(0);
 	}
 	PBYTE TableBegin = (PBYTE)((DWORD)lastSectionheader + 0x28);
@@ -394,24 +385,24 @@ BOOL NewSections(LPVOID pNewImageBuffer, OUT PVOID* pNew_ImageBuffer)
 	memcpy(TableBegin, SectionTable, SECTIONTABLELENTH);
 	PBYTE codebegin;
 	/*
-	ĞÂÔö½ÚµÄ·½Ê½ºÍÈÎÒâ¿Õ°×´¦µÄ·½Ê½²»Ò»Ñù£¬ĞÂÔö½Ú±íĞèÒª¿¼ÂÇÄÚ´æ¶ÔÆëºÍÎÄ¼ş¶ÔÆëµÄ´óĞ¡
+	æ–°å¢èŠ‚çš„æ–¹å¼å’Œä»»æ„ç©ºç™½å¤„çš„æ–¹å¼ä¸ä¸€æ ·ï¼Œæ–°å¢èŠ‚è¡¨éœ€è¦è€ƒè™‘å†…å­˜å¯¹é½å’Œæ–‡ä»¶å¯¹é½çš„å¤§å°
 
-	Èç¹ûÄÚ´æ¶ÔÆëÊÇ1000£¬ÎÄ¼ş¶ÔÆëÊÇ200£¬ÄÇ¾ÍÒªÓÃrva+£¨VirtualSize/SectionAlignment£©*SectionAlignment À´¼ÆËã
-	µ«ÊÇÕâ¸ö£¨VirtualSize/SectionAlignment£©*SectionAlignment¿ÉÄÜÎª0 ÒòÎª³ÌĞòµÄ³ı·¨²»»á¸øĞ¡Êıµã ÊÇintÀàĞÍ ²»ÊÇfloat¡£
-	ËùÒÔÒª·ÖÁ½ÖÖÇé¿öÀ´
+	å¦‚æœå†…å­˜å¯¹é½æ˜¯1000ï¼Œæ–‡ä»¶å¯¹é½æ˜¯200ï¼Œé‚£å°±è¦ç”¨rva+ï¼ˆVirtualSize/SectionAlignmentï¼‰*SectionAlignment æ¥è®¡ç®—
+	ä½†æ˜¯è¿™ä¸ªï¼ˆVirtualSize/SectionAlignmentï¼‰*SectionAlignmentå¯èƒ½ä¸º0 å› ä¸ºç¨‹åºçš„é™¤æ³•ä¸ä¼šç»™å°æ•°ç‚¹ æ˜¯intç±»å‹ ä¸æ˜¯floatã€‚
+	æ‰€ä»¥è¦åˆ†ä¸¤ç§æƒ…å†µæ¥
 
-	Èç¹ûÄÚ´æ¶ÔÆëºÍÎÄ¼ş¶ÔÆë¶¼ÊÇ1000´óĞ¡£¬ÄÇ¾ÍÖ»ĞèÒªSectionAlignment»òÕßfilealignmentµÄÖµ£¬µ«ÊÇÆäÊµ¶¼Ò»Ñù
+	P.P.S:å¦‚æœå†…å­˜å¯¹é½å’Œæ–‡ä»¶å¯¹é½éƒ½æ˜¯1000å¤§å°ï¼Œé‚£å°±åªéœ€è¦SectionAlignmentæˆ–è€…filealignmentçš„å€¼ï¼Œä½†æ˜¯å…¶å®éƒ½ä¸€æ ·
 	*/
 
 	if (((int)lastSectionheader->Misc.VirtualSize - (int)pOptionHeader->SectionAlignment) > 0)
 	{
 		codebegin = (PBYTE)((DWORD)pNewImageBuffer + (DWORD)lastSectionheader->VirtualAddress + (((DWORD)lastSectionheader->Misc.VirtualSize / (DWORD)pOptionHeader->SectionAlignment) + 1) * (DWORD)pOptionHeader->SectionAlignment);
-		printf("SectionAlignment < VirtualSize µÄcodebegin:%08x\npOptionHeader->SectionAlignment:%08x\n", codebegin, pOptionHeader->SectionAlignment);
+		printf("SectionAlignment < VirtualSize çš„codebegin:%08x\npOptionHeader->SectionAlignment:%08x\n", codebegin, pOptionHeader->SectionAlignment);
 	}
 	else
 	{
 		codebegin = (PBYTE)((DWORD)pNewImageBuffer + (DWORD)lastSectionheader->VirtualAddress + (DWORD)pOptionHeader->SectionAlignment);
-		printf("SectionAlignment > VirtualSize µÄcodebegin:%08x\npOptionHeader->SectionAlignment:%08x\n", codebegin, pOptionHeader->SectionAlignment);
+		printf("SectionAlignment > VirtualSize çš„codebegin:%08x\npOptionHeader->SectionAlignment:%08x\n", codebegin, pOptionHeader->SectionAlignment);
 	}
 	DWORD Miscaddr = pOptionHeader->SectionAlignment;
 	*(PDWORD)(TableBegin + 8) = Miscaddr;
@@ -440,21 +431,21 @@ BOOL NewSections(LPVOID pNewImageBuffer, OUT PVOID* pNew_ImageBuffer)
 
 	memcpy(codebegin, shellcode, SHELLCODELENTH);
 	DWORD calladdr = MESSAGEBOXADDRESS - (pOptionHeader->ImageBase + (((DWORD)codebegin + 0xD) - (DWORD)pNewImageBuffer));
-	// codebegin+0xD ¾ÍÊÇ shellcode ÖĞ 0xE9µÄÎ»ÖÃ
+	// codebegin+0xD å°±æ˜¯ shellcode ä¸­ 0xE9çš„ä½ç½®
 
 	*(PDWORD)(codebegin + 9) = calladdr;
-	// codebegin+9 ¾ÍÊÇ shellcode ÖĞ 0xE8µÄÎ»ÖÃ
+	// codebegin+9 å°±æ˜¯ shellcode ä¸­ 0xE8çš„ä½ç½®
 
 	printf("\nE8:%x\n", *(PDWORD)(codebegin + 9));
 	DWORD jmpaddr = ((DWORD)pOptionHeader->ImageBase + (DWORD)pOptionHeader->AddressOfEntryPoint) - ((DWORD)pOptionHeader->ImageBase + (((DWORD)codebegin + SHELLCODELENTH) - (DWORD)pNewImageBuffer));
-	// Ó²±àÂë = ÒªÌø×ªµÄÎ»ÖÃ-E9µÄÎ»ÖÃ+5 =ÒªÌø×ªµÄÎ»ÖÃ-shellcodeÏà¶ÔÎ»ÖÃ
+	// ç¡¬ç¼–ç  = è¦è·³è½¬çš„ä½ç½®-E9çš„ä½ç½®+5 =è¦è·³è½¬çš„ä½ç½®-shellcodeç›¸å¯¹ä½ç½®
 
 	*(PDWORD)(codebegin + 0xE) = jmpaddr;
 
 	printf("E9:%x\n", *(PDWORD)(codebegin + 0xD));
-	printf("Ô­OEP:%x\n", pOptionHeader->AddressOfEntryPoint);
+	printf("åŸOEP:%x\n", pOptionHeader->AddressOfEntryPoint);
 	pOptionHeader->AddressOfEntryPoint = codebegin - pNewImageBuffer;
-	printf("ĞÂOEP:%x\n", pOptionHeader->AddressOfEntryPoint);
+	printf("æ–°OEP:%x\n", pOptionHeader->AddressOfEntryPoint);
 
 
 	*pNew_ImageBuffer = pNewImageBuffer;
@@ -462,7 +453,7 @@ BOOL NewSections(LPVOID pNewImageBuffer, OUT PVOID* pNew_ImageBuffer)
 
 	return true;
 }
-/*Ñ¹Ëõ¹ı³Ì*/
+/*å‹ç¼©è¿‡ç¨‹*/
 DWORD imageBuffertoNewFileBuffer(LPVOID pNew_ImageBuffer, OUT PVOID* pFileBuffer)
 {
 
@@ -477,16 +468,10 @@ DWORD imageBuffertoNewFileBuffer(LPVOID pNew_ImageBuffer, OUT PVOID* pFileBuffer
 	pOptionHeader = (PIMAGE_OPTIONAL_HEADER32)(&pNTHeader->OptionalHeader);
 	pSectionHeader = (PIMAGE_SECTION_HEADER)((DWORD)pOptionHeader + pPEHeader->SizeOfOptionalHeader);
 	size_t Newsize = pSectionHeader[pPEHeader->NumberOfSections - 1].PointerToRawData + pSectionHeader[pPEHeader->NumberOfSections - 1].SizeOfRawData;
-	/*printf("sizeof_Newsize:%08x\nNumberOfSections - 1:%u\nPointerToRawData:%08x\n.SizeOfRawData:%08x\n",
-		Newsize,
-		pPEHeader->NumberOfSections - 1,
-		pSectionHeader[pPEHeader->NumberOfSections - 1].PointerToRawData,
-		pSectionHeader[pPEHeader->NumberOfSections - 1].SizeOfRawData);*/
-
 	LPVOID pNewBuffer = malloc(Newsize);
 	if (!pNewBuffer)
 	{
-		printf(" ·ÖÅä¿Õ¼äÊ§°Ü! ");
+		printf(" åˆ†é…ç©ºé—´å¤±è´¥! ");
 	}
 	else
 	{
@@ -511,7 +496,7 @@ DWORD imageBuffertoNewFileBuffer(LPVOID pNew_ImageBuffer, OUT PVOID* pFileBuffer
 
 
 }
-/*´æÅÌ*/
+/*å­˜ç›˜*/
 BOOL MemoryToFile(PVOID pFileBuffer, DWORD size, LPSTR lpszFile)
 {
 	FILE* fp;
@@ -523,23 +508,24 @@ BOOL MemoryToFile(PVOID pFileBuffer, DWORD size, LPSTR lpszFile)
 	fclose(fp);
 	return 1;
 }
-/*ÒÆ¶¯µ¼³ö±í*/
+/*ç§»åŠ¨å¯¼å‡ºè¡¨*/
 void MoveExportTable(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer)
 {
+	srand(static_cast<unsigned int>(time(0)));
 	IniPefileDate(pFileBuffer);
 	PIMAGE_SECTION_HEADER pLastSectionHeader = pPEHeader->NumberOfSections - 1 + pSectionHeader;
-	printf("×îºóÒ»½ÚµÄÃû³Æ£º%s\n", pLastSectionHeader->Name);
+	printf("æœ€åä¸€èŠ‚çš„åç§°ï¼š%s\n", pLastSectionHeader->Name);
 	//pLastSectionHeader->PointerToRawData;
 	IMAGE_DATA_DIRECTORY pDatadirectory = pOptionHeader->DataDirectory[0];
 	if (pDatadirectory.VirtualAddress == 0)
 	{
-		printf("Ã»ÓĞµ¼³ö±í¡£");
+		printf("æ²¡æœ‰å¯¼å‡ºè¡¨ã€‚");
 		exit(0);
 	}
 	PIMAGE_EXPORT_DIRECTORY pEntryExporte = (PIMAGE_EXPORT_DIRECTORY)((DWORD)pFileBuffer + RVAToFOA(pFileBuffer, pDatadirectory.VirtualAddress));
 	/*
-	µÚ¶ş²½£º¸´ÖÆAddressOfFunctions
-	³¤¶È£º4*NumberOfFunctions
+	ç¬¬äºŒæ­¥ï¼šå¤åˆ¶AddressOfFunctions
+	é•¿åº¦ï¼š4*NumberOfFunctions
 	*/
 	PDWORD FuncAddr = (PDWORD)((DWORD)pFileBuffer + RVAToFOA(pFileBuffer, pEntryExporte->AddressOfFunctions));
 	DWORD sizeofFunc = pEntryExporte->NumberOfFunctions * 4;
@@ -547,8 +533,8 @@ void MoveExportTable(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer)
 	PDWORD functionnewaddr = CopyFirstAddr;
 	memcpy(functionnewaddr, FuncAddr, sizeofFunc);
 	/*
-	µÚÈı²½£º¸´ÖÆAddressOfNameOrdinals
-	³¤¶È£ºNumberOfNames*2
+	ç¬¬ä¸‰æ­¥ï¼šå¤åˆ¶AddressOfNameOrdinals
+	é•¿åº¦ï¼šNumberOfNames*2
 	*/
 	PWORD OrdAddr = (PWORD)((DWORD)pFileBuffer + RVAToFOA(pFileBuffer, pEntryExporte->AddressOfNameOrdinals));
 	for (size_t i = 0; i < pEntryExporte->NumberOfNames; i++)
@@ -560,9 +546,9 @@ void MoveExportTable(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer)
 	PDWORD Ordinalnewaddr = (PDWORD)((DWORD)CopyFirstAddr + pEntryExporte->NumberOfFunctions * 4);
 	memcpy(Ordinalnewaddr, OrdAddr, sizeofOrd);
 	/*
-	µÚËÄ²½£º¸´ÖÆAddressOfNames
+	ç¬¬å››æ­¥ï¼šå¤åˆ¶AddressOfNames
 
-	³¤¶È£ºNumberOfNames*4
+	é•¿åº¦ï¼šNumberOfNames*4
 	*/
 	PDWORD NameAddr = (PDWORD)((DWORD)pFileBuffer + RVAToFOA(pFileBuffer, pEntryExporte->AddressOfNames));
 	PDWORD NamenewAddr = (PDWORD)((DWORD)CopyFirstAddr + pEntryExporte->NumberOfFunctions * 4 + pEntryExporte->NumberOfNames * 2);
@@ -574,9 +560,9 @@ void MoveExportTable(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer)
 	memcpy(NamenewAddr, NameAddr, sizeofNameAddr);
 
 	/*
-	µÚÎå²½£º¸´ÖÆËùÓĞµÄº¯ÊıÃû
+	ç¬¬äº”æ­¥ï¼šå¤åˆ¶æ‰€æœ‰çš„å‡½æ•°å
 
-	³¤¶È²»È·¶¨£¬¸´ÖÆÊ±Ö±½ÓĞŞ¸´AddressOfNames
+	é•¿åº¦ä¸ç¡®å®šï¼Œå¤åˆ¶æ—¶ç›´æ¥ä¿®å¤AddressOfNames
 	*/
 	CopyFirstAddr = (PDWORD)((DWORD)CopyFirstAddr + pEntryExporte->NumberOfFunctions * 4 + pEntryExporte->NumberOfNames * 2 + pEntryExporte->NumberOfNames * 4);
 	PDWORD RVA_NameAddr = CopyFirstAddr;
@@ -584,14 +570,13 @@ void MoveExportTable(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer)
 	for (DWORD i = 0; i < pEntryExporte->NumberOfNames; i++) {
 		char* nameStr = (char*)(RVAToFOA(pFileBuffer, *(DWORD*)NameAddr) + (DWORD)pFileBuffer);
 		printf("nameStr = %s\n", nameStr);
-		memcpy((PDWORD)(CopyFirstAddr), nameStr, strlen(nameStr) + 1);//×Ö·û´®½áÎ²µÄ\0±ğÍüÁË¸´ÖÆ
-		RVA_NameAddr = (PDWORD)FOAToVA(pFileBuffer, (DWORD)(CopyFirstAddr - (DWORD)pFileBuffer));//ĞŞ¸Ä¶ÔÓ¦µÄº¯ÊıÃû³Æ±íÖĞµÄµØÖ·Öµ
+		memcpy((PDWORD)(CopyFirstAddr), nameStr, strlen(nameStr) + 1);//å­—ç¬¦ä¸²ç»“å°¾çš„\0åˆ«å¿˜äº†å¤åˆ¶
+		RVA_NameAddr = (PDWORD)FOAToVA(pFileBuffer, (DWORD)(CopyFirstAddr - (DWORD)pFileBuffer));//ä¿®æ”¹å¯¹åº”çš„å‡½æ•°åç§°è¡¨ä¸­çš„åœ°å€å€¼
 		CopyFirstAddr = (PDWORD)((DWORD)CopyFirstAddr + (strlen(nameStr) + 1));
 		NameAddr = (PDWORD)((DWORD*)NameAddr + 1);
 		RVA_NameAddr++;
 	}
 	memcpy(CopyFirstAddr, pEntryExporte, sizeof(IMAGE_EXPORT_DIRECTORY));
-	//FOAToVA((DWORD)pExporFunctionsAddr , pFileBuffer);
 	pEntryExporte->AddressOfFunctions = FOAToVA(pFileBuffer,(DWORD)functionnewaddr - (DWORD)pFileBuffer);
 	pEntryExporte->AddressOfNames = FOAToVA(pFileBuffer, (DWORD)NamenewAddr - (DWORD)pFileBuffer);
 	pEntryExporte->AddressOfNameOrdinals = FOAToVA( pFileBuffer, (DWORD)Ordinalnewaddr - (DWORD)pFileBuffer);
@@ -603,11 +588,12 @@ void MoveExportTable(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer)
 	*pNewFileBuffer = pFileBuffer;
 	pFileBuffer = NULL;
 }
+/*ç§»åŠ¨é‡å®šä½è¡¨*/
 void MoveRelocTable(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer)
 {
+	srand(static_cast<unsigned int>(time(0))); 
 	IniPefileDate(pFileBuffer);
 	PIMAGE_SECTION_HEADER pLastSectionHeader = pPEHeader->NumberOfSections - 1 + pSectionHeader;
-	printf("×îºóÒ»½ÚµÄÃû³Æ£º%s\n", pLastSectionHeader->Name);
 	PIMAGE_BASE_RELOCATION Reloction = (PIMAGE_BASE_RELOCATION)(RVAToFOA(pFileBuffer, (pOptionHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress)) + (DWORD)pFileBuffer);
 	printf("Reloction:%08X\n", Reloction);
 	int size_of_all = 0;
@@ -620,16 +606,41 @@ void MoveRelocTable(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer)
 
 		Reloction = (PIMAGE_BASE_RELOCATION)((DWORD)Reloction + Reloction->SizeOfBlock);
 	}
-
 	PDWORD CopyFirstAddr = (PDWORD)(pLastSectionHeader->PointerToRawData + (DWORD)pFileBuffer);
-	printf("CopyFirstAddr = %08X Reloction = %08X size_of_all = %08X\n", CopyFirstAddr, Reloction, size_of_all);
 	Reloction = (PIMAGE_BASE_RELOCATION)(RVAToFOA(pFileBuffer, (pOptionHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress)) + (DWORD)pFileBuffer);
-	printf("CopyFirstAddr = %08X Reloction = %08X size_of_all = %08X\n", CopyFirstAddr, Reloction, size_of_all);
 	memcpy(CopyFirstAddr, Reloction, size_of_all);
 	pOptionHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress = FOAToVA(pFileBuffer,(DWORD)CopyFirstAddr - (DWORD)pFileBuffer);
 	*pNewFileBuffer = pFileBuffer;
 	pFileBuffer = NULL;
 }
+/*ä¿®æ”¹imagebaseå¹¶ä¿®å¤é‡å®šä½è¡¨*/
+VOID ReoairRelocationTable(LPVOID pFileBuffer, OUT PVOID* pNewFileBuffer)
+{
+	IniPefileDate(pFileBuffer);
+	PIMAGE_SECTION_HEADER pLastSectionHeader = pPEHeader->NumberOfSections - 1 + pSectionHeader;
+	PIMAGE_BASE_RELOCATION Reloction = (PIMAGE_BASE_RELOCATION)(RVAToFOA(pFileBuffer, (pOptionHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress)) + (DWORD)pFileBuffer);
+	//æ”¹ImageBase
+	DWORD diffOfImageBase = 0x20000000 - pOptionHeader->ImageBase;
+	pOptionHeader->ImageBase = 0x20000000;
+	//ä¿®å¤é‡å®šä½è¡¨
+	while (Reloction->SizeOfBlock && Reloction->VirtualAddress) {
+		DWORD num_of_items = (Reloction->SizeOfBlock - 8) / 2;
+		PWORD pdata = (PWORD)Reloction + 1;
+		for (size_t i = 0; i < num_of_items; i++, pdata++) {
+	
+			if (!(*(pdata) & 0xf000))
+			{
+				continue;
+			}
+			DWORD VA = (*(pdata) & 0x0fff) + Reloction->VirtualAddress;
+			*(PDWORD)((DWORD)pFileBuffer +RVAToFOA(pFileBuffer, VA)) += diffOfImageBase;
+		}
+		Reloction = (PIMAGE_BASE_RELOCATION)((DWORD)Reloction + Reloction->SizeOfBlock);
+	}
+	*pNewFileBuffer = pFileBuffer;
+	pFileBuffer = NULL;
+}
+
 DWORD RVAToFOA(LPVOID pFileBuffer, size_t RVA)
 {
 	pDosHeader = (PIMAGE_DOS_HEADER)pFileBuffer;
@@ -638,25 +649,25 @@ DWORD RVAToFOA(LPVOID pFileBuffer, size_t RVA)
 	pOptionHeader = (PIMAGE_OPTIONAL_HEADER32)(&pNTHeader->OptionalHeader);
 	pSectionHeader = (PIMAGE_SECTION_HEADER)((DWORD)pOptionHeader + pPEHeader->SizeOfOptionalHeader);
 	size_t FOA = 0;
-	if (RVA < pSectionHeader->VirtualAddress)//ÅĞ¶ÏRVAÊÇ·ñÔÚPEÍ·Çø
+	if (RVA < pSectionHeader->VirtualAddress)//åˆ¤æ–­RVAæ˜¯å¦åœ¨PEå¤´åŒº
 	{
 		if (RVA < pSectionHeader->PointerToRawData)
-			return RVA;//´ËÊ±FOA == RVA
+			return RVA;//æ­¤æ—¶FOA == RVA
 		else
 			return 0;
 	}
 
-	for (int i = 0; i < pPEHeader->NumberOfSections; i++)//Ñ­»·±éÀú½Ú±íÍ·
+	for (int i = 0; i < pPEHeader->NumberOfSections; i++)//å¾ªç¯éå†èŠ‚è¡¨å¤´
 	{
-		if (i)//±éÀú½Ú±íÍ·£¬µÚÒ»´Î²»±éÀú£¬
+		if (i)//éå†èŠ‚è¡¨å¤´ï¼Œç¬¬ä¸€æ¬¡ä¸éå†ï¼Œ
 			pSectionHeader = (PIMAGE_SECTION_HEADER)((DWORD)pSectionHeader + IMAGE_SIZEOF_SECTION_HEADER);
 
-		if (RVA >= pSectionHeader->VirtualAddress)//ÊÇ·ñ´óÓÚÕâ¸ö½Ú±íµÄRVA
+		if (RVA >= pSectionHeader->VirtualAddress)//æ˜¯å¦å¤§äºè¿™ä¸ªèŠ‚è¡¨çš„RVA
 		{
-			if (RVA <= pSectionHeader->VirtualAddress + pSectionHeader->SizeOfRawData)//ÅĞ¶ÏÊÇ·ñÔÚÕâ¸ö½ÚÇø
-				return (RVA - pSectionHeader->VirtualAddress) + pSectionHeader->PointerToRawData;//È·¶¨½ÚÇøºó£¬¼ÆËãFOA
+			if (RVA <= pSectionHeader->VirtualAddress + pSectionHeader->SizeOfRawData)//åˆ¤æ–­æ˜¯å¦åœ¨è¿™ä¸ªèŠ‚åŒº
+				return (RVA - pSectionHeader->VirtualAddress) + pSectionHeader->PointerToRawData;//ç¡®å®šèŠ‚åŒºåï¼Œè®¡ç®—FOA
 		}
-		else//RVA²»¿ÉÄÜ´ËÊ±µÄpSectionHeader->VirtuallAddressĞ¡£¬³ı·ÇÊÇ·µ»ØÖµÎª0µÄÇé¿ö¡£
+		else//RVAä¸å¯èƒ½æ­¤æ—¶çš„pSectionHeader->VirtuallAddresså°ï¼Œé™¤éæ˜¯è¿”å›å€¼ä¸º0çš„æƒ…å†µã€‚
 			return 0;
 	}
 
@@ -686,7 +697,7 @@ void PrintInfo(LPVOID pFileBuffer)
 {
 	IniPefileDate(pFileBuffer);
 	printf("================PE_Table================\n");
-	printf("NTÍ· = %X\nPE±êÖ¾ = %X\n½Ú±íµÄ¸öÊı = %d\n¿ÉÑ¡Í·´óĞ¡ = %08X\nEOA = %08X\nImageBase =  %08X\nÎÄ¼ş¶ÔÆë =  %X\nÄÚ´æ¶ÔÆë =  %X\nPEÍ·´óĞ¡ = %08X\n,Image´óĞ¡ = %08X\n",
+	printf("NTå¤´ = %X\nPEæ ‡å¿— = %X\nèŠ‚è¡¨çš„ä¸ªæ•° = %d\nå¯é€‰å¤´å¤§å° = %08X\nEOA = %08X\nImageBase =  %08X\næ–‡ä»¶å¯¹é½ =  %X\nå†…å­˜å¯¹é½ =  %X\nPEå¤´å¤§å° = %08X\n,Imageå¤§å° = %08X\n",
 		pDosHeader->e_lfanew,
 		pNTHeader->Signature,
 		pPEHeader->NumberOfSections,
@@ -700,49 +711,35 @@ void PrintInfo(LPVOID pFileBuffer)
 	for (int i = 0; i < pPEHeader->NumberOfSections; i++)
 	{
 		pSectionHeader = (PIMAGE_SECTION_HEADER)((DWORD)pOptionHeader + (DWORD)pPEHeader->SizeOfOptionalHeader + IMAGE_SIZEOF_SECTION_HEADER * i);
-		printf("½Ú±íÃû = %s\tPToRData = %08X SizeOfRData = %08X VA = %08X VSize = %08X ÊôĞÔ = %08X\n", pSectionHeader->Name, pSectionHeader->PointerToRawData, pSectionHeader->SizeOfRawData, pSectionHeader->VirtualAddress, pSectionHeader->Misc.VirtualSize,pSectionHeader->Characteristics);
+		printf("èŠ‚è¡¨å = %s\tPToRData = %08X SizeOfRData = %08X VA = %08X VSize = %08X å±æ€§ = %08X\n", pSectionHeader->Name, pSectionHeader->PointerToRawData, pSectionHeader->SizeOfRawData, pSectionHeader->VirtualAddress, pSectionHeader->Misc.VirtualSize,pSectionHeader->Characteristics);
 	}
 	pSectionHeader = (PIMAGE_SECTION_HEADER)((DWORD)pOptionHeader + (DWORD)pPEHeader->SizeOfOptionalHeader);
 	printf("================Data_Directory================\n");
 	PEtables = pOptionHeader->DataDirectory[0];
 
-	Exportable = (PIMAGE_EXPORT_DIRECTORY)RVAToFOA(pFileBuffer, PEtables.VirtualAddress); //Ö¸Ïòµ¼³ö±í//RVA×ªFOA
+	Exportable = (PIMAGE_EXPORT_DIRECTORY)RVAToFOA(pFileBuffer, PEtables.VirtualAddress); //æŒ‡å‘å¯¼å‡ºè¡¨//RVAè½¬FOA
 
-	printf("pFileBufferµØÖ·:%08X\n", pFileBuffer);
+	printf("pFileBufferåœ°å€:%08X\n", pFileBuffer);
 
-	printf("µ¼³ö±íFOA:%08X\nSize = %X\n", Exportable, PEtables.Size);
+	printf("å¯¼å‡ºè¡¨FOA:%08X\nSize = %X\n", Exportable, PEtables.Size);
 	TrueExport = (PIMAGE_EXPORT_DIRECTORY)((DWORD)pFileBuffer + (DWORD)Exportable);
-	printf("µ¼³ö±íµØÖ·Îª:%08X\n================Export_Directory================\n", TrueExport);
+	printf("å¯¼å‡ºè¡¨åœ°å€ä¸º:%08X\n================Export_Directory================\n", TrueExport);
 
-	//printf("AddressOfNames = %08X\nTrueAddressOfNames = %08X\nFOA_AddressOfNames = %08X\nFOA_TrueAddressOfNames = %08X\nTrueExport->NumberOfNames = %d\nAddressOfFunctions = %08X\nTrueAddressOfFunctions = %08X\nTrueNumberOfFunctions = %d\nAddressOfNameOrdinals = %08X\nTrueAddressOfNameOrdinals = %08X\nTrueExport->Name-->Address = %08X FOA_Address = %08X -->%s\nTrueExport->Base = %08X\n",
-	//	TrueExport->AddressOfNames,
-	//	(DWORD)pFileBuffer + TrueExport->AddressOfNames,
-	//	RVAToFOA(pFileBuffer, TrueExport->AddressOfNames),
-	//	(DWORD)pFileBuffer + RVAToFOA(pFileBuffer, TrueExport->AddressOfNames),
-	//	TrueExport->NumberOfNames, //5
-	//	TrueExport->AddressOfFunctions,
-	//	(DWORD)pFileBuffer + TrueExport->AddressOfFunctions,
-	//	TrueExport->NumberOfFunctions,
-	//	TrueExport->AddressOfNameOrdinals,
-	//	(DWORD)pFileBuffer + TrueExport->AddressOfNameOrdinals,
-	//	TrueExport->Name,
-	//	(DWORD)pFileBuffer + TrueExport->Name,
-	//	(DWORD)pFileBuffer + TrueExport->Name,
-	//	TrueExport->Base);
+
 	DWORD* FOA_Name = (DWORD*)((DWORD)pFileBuffer + RVAToFOA(pFileBuffer, TrueExport->AddressOfNames));
 	/*
-	Exportable = RVAToFOA(PEtables[0].VirtualAddress)µ¼³ö±íÊı¾İµÄµØÖ·
-	TrueExport = pFileBuffer+ RVAToFOA(Exportable) µ¼³ö±íÊı¾İµÄÕæÊµµØÖ·
-	nametable_addr=RVAToFOA(TrueExport.AddressOfNames) ¡±¡°¡±¡°º¯ÊıÃû±í¡±¡°¡±¡°µÄµØÖ·
-	nametable_addr_True = pFileBuffer+ RVAToFOA(TrueExport.AddressOfNames) ¡±¡°¡±¡°º¯ÊıÃû±í¡±¡°¡±¡°µÄµØÖ·
-	name_addr = RVAToFOA(name_addr+i)¡°¡±¡°º¯ÊıÃû¡±¡°¡±¡°µÄµØÖ·
-	name = pFileBuffer+RVAToFOA(name_addr+i)¡°¡±¡°º¯ÊıÃû¡±¡°¡±¡°µÄÕæÊµµØÖ·£¨¼´ĞèÒª¶ÁÈ¡Ãû×ÖµÄµØÖ·£©
+	Exportable = RVAToFOA(PEtables[0].VirtualAddress)å¯¼å‡ºè¡¨æ•°æ®çš„åœ°å€
+	TrueExport = pFileBuffer+ RVAToFOA(Exportable) å¯¼å‡ºè¡¨æ•°æ®çš„çœŸå®åœ°å€
+	nametable_addr=RVAToFOA(TrueExport.AddressOfNames) â€â€œâ€â€œå‡½æ•°åè¡¨â€â€œâ€â€œçš„åœ°å€
+	nametable_addr_True = pFileBuffer+ RVAToFOA(TrueExport.AddressOfNames) â€â€œâ€â€œå‡½æ•°åè¡¨â€â€œâ€â€œçš„åœ°å€
+	name_addr = RVAToFOA(name_addr+i)â€œâ€â€œå‡½æ•°åâ€â€œâ€â€œçš„åœ°å€
+	name = pFileBuffer+RVAToFOA(name_addr+i)â€œâ€â€œå‡½æ•°åâ€â€œâ€â€œçš„çœŸå®åœ°å€ï¼ˆå³éœ€è¦è¯»å–åå­—çš„åœ°å€ï¼‰
 	*/
 
 	printf("\n================FunctionNameTable================\n");
 	for (size_t k = 0; k < TrueExport->NumberOfNames; k++) {
 		printf("FOA_Name = %08X --> %s\n", *(FOA_Name + k), (char*)(RVAToFOA(pFileBuffer, *(FOA_Name + k)) + (DWORD)pFileBuffer));
-		//NameµØÖ·²»¼Ófilebuffer£¬µ«ÊÇ¶ÁÈ¡NameÖµ¾ÍĞèÒª¼ÓFileBuffer¡£
+		//Nameåœ°å€ä¸åŠ filebufferï¼Œä½†æ˜¯è¯»å–Nameå€¼å°±éœ€è¦åŠ FileBufferã€‚
 	}
 	printf("\n================FunctionOrdinalsTable================\n");
 	WORD* Ordinals = (WORD*)((DWORD)pFileBuffer + RVAToFOA(pFileBuffer, TrueExport->AddressOfNameOrdinals));
@@ -762,7 +759,7 @@ void PrintInfo(LPVOID pFileBuffer)
 	for (size_t i = 0; i < TrueExport->NumberOfFunctions; i++)
 	{
 		printf("FOA_functions = %08X\n", *(functions + i)); 
-		//functions[Ordinals[i]] ²»ÄÜÓÃÕâ¸ö ÒòÎªÃû×ÖË³Ğò±íµÄÊıÁ¿ºÍº¯ÊıÊıÁ¿²»Ò»ÖÂ£¬demotll2.dll º¯ÊıÊıÁ¿ÊÇ5¸ö Ãû×ÖË³Ğò±íÖ»ÓĞ3¸ö ËùÒÔ¶ÁÈ¡²»ÁËÒ»Ğ©ÄÚ´æ
+		//functions[Ordinals[i]] ä¸èƒ½ç”¨è¿™ä¸ª å› ä¸ºåå­—é¡ºåºè¡¨çš„æ•°é‡å’Œå‡½æ•°æ•°é‡ä¸ä¸€è‡´ï¼Œdemotll2.dll å‡½æ•°æ•°é‡æ˜¯5ä¸ª åå­—é¡ºåºè¡¨åªæœ‰3ä¸ª æ‰€ä»¥è¯»å–ä¸äº†ä¸€äº›å†…å­˜
 	}
 	PDWORD Name_True_Addr = NULL;
 	printf("================FunctionByNames================\n");
@@ -790,13 +787,34 @@ void PrintInfo(LPVOID pFileBuffer)
 			if ((0xf000 & (*pdata)) >> 12 == 3)
 			{
 				printf("type:%02x RVA:%08X\n", (0xf000 & (*pdata)) >> 12, (0x0fff & (*pdata)) + TrueReloc->VirtualAddress);
-
 			}
 		}
 		size_of_all = size_of_all + TrueReloc->SizeOfBlock;
-		printf("size_of_all = %08X\n", size_of_all);
 		TrueReloc = (PIMAGE_BASE_RELOCATION)((DWORD)TrueReloc + TrueReloc->SizeOfBlock);
 	}
+	printf("size_of_all = %08X\n", size_of_all);
+}
+/*ç”Ÿæˆéšæœºå­—ç¬¦ä¸²ï¼Œç•™ç»™ChangePEinfoç”¨*/
+char* generateRandomString(int length)
+{
+	const char* lowerCaseLetters = "abcdefghijklmnopqrstuvwxyz";
+	const char* upperCaseLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	int lowerCaseLength = strlen(lowerCaseLetters);
+	int upperCaseLength = strlen(upperCaseLetters);
+	// åˆ†é…å†…å­˜ +1 æ˜¯ä¸ºäº†å­˜å‚¨ç»“å°¾çš„ç©ºå­—ç¬¦ '\0'
+	char* randomString = new char[length + 1];
+
+	// ç¬¬ä¸€ä¸ªå­—æ¯å¤§å†™
+	randomString[0] = upperCaseLetters[rand() % upperCaseLength];
+
+	// å‰©ä½™çš„å­—æ¯å°å†™
+	for (int i = 1; i < length; ++i) {
+		randomString[i] = lowerCaseLetters[rand() % lowerCaseLength];
+	}
+	// æ·»åŠ å­—ç¬¦ä¸²ç»“å°¾çš„ç©ºå­—ç¬¦
+	randomString[length] = '\0';
+
+	return randomString;
 }
 VOID operate()
 {
@@ -804,16 +822,23 @@ VOID operate()
 	LPVOID pNewFileBuffer = NULL;
 	LPVOID pSaveFileBuffer = NULL;
 	LPVOID FileBuffer = NULL;
-	DWORD ret1 = ReadPEFile(file_path, &pFileBuffer);  // &pFileBuffer(void**ÀàĞÍ) ´«µİµØÖ·¶ÔÆäÖµ¿ÉÒÔ½øĞĞĞŞ¸Ä
-	printf("\nexe->filebuffer  Îª¼ÆËãËùµÃÎÄ¼ş´óĞ¡£º%08x\n", ret1);
+	LPVOID ReparFileBuffer = NULL;
+	LPVOID MoveExpFileBuffer = NULL;
+	LPVOID MoveRolFileBuffer = NULL;
+	LPVOID pNew_FileBuffer = NULL;
+	DWORD ret1 = ReadPEFile(file_path, &pFileBuffer);  // &pFileBuffer(void**ç±»å‹) ä¼ é€’åœ°å€å¯¹å…¶å€¼å¯ä»¥è¿›è¡Œä¿®æ”¹
+	printf("\nexe->filebuffer  ä¸ºè®¡ç®—æ‰€å¾—æ–‡ä»¶å¤§å°ï¼š%08x\n", ret1);
 	DWORD ret2 = AddFileBuffer(pFileBuffer, ret1, &pNewFileBuffer);
-	printf("\nfilebuffer->Newfilebuffer  Îª¼ÆËãËùµÃÎÄ¼ş´óĞ¡£º%08x\n", ret2);
+	printf("\nfilebuffer->Newfilebuffer  ä¸ºè®¡ç®—æ‰€å¾—æ–‡ä»¶å¤§å°ï¼š%08x\n", ret2);
 	ChangePEinfo(pNewFileBuffer,&pSaveFileBuffer);
-	//MoveExportTable(pSaveFileBuffer, &FileBuffer);
-	MoveRelocTable(pSaveFileBuffer, &FileBuffer);
+	MoveExportTable(pSaveFileBuffer, &MoveExpFileBuffer);
+	DWORD ret3 = AddFileBuffer(MoveExpFileBuffer, ret2, &pNew_FileBuffer);
+	ChangePEinfo(pNew_FileBuffer, &MoveRolFileBuffer);
+	MoveRelocTable(MoveRolFileBuffer, &ReparFileBuffer);
+	ReoairRelocationTable(ReparFileBuffer, &FileBuffer);
 	PrintInfo(FileBuffer);
-	MemoryToFile(FileBuffer, ret2, write_file_path);
-	free(pFileBuffer); 
-	free(pNewFileBuffer);
-	//free(pSaveFileBuffer);
+	MemoryToFile(FileBuffer, ret3, write_file_path);
+	free(pFileBuffer);
+	free(pSaveFileBuffer);
+	free(ReparFileBuffer);
 }
